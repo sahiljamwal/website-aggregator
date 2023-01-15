@@ -1,10 +1,26 @@
 import { launch } from "puppeteer";
+import { ChatGPTAPIBrowser } from "chatgpt";
+import { v4 as uuidv4 } from "uuid";
+export default class ApiController {
+  static database = [];
 
-export default class apiController {
   submitWebsite = async (req, res) => {
     const { url } = req.body;
 
     const { websiteContent, websiteOgImage } = await this.scrapWebsite(url);
+
+    //👇🏻 accepts the website content as a parameter
+    let result = await this.chatgptFunction(websiteContent);
+
+    //👇🏻 adds the brand image and ID to the result
+    result.brandName = websiteOgImage;
+    result.id = uuidv4();
+    ApiController.database.push(result);
+
+    return res.json({
+      message: "Request successful!",
+      database: ApiController.database,
+    });
 
     console.log("url:::", url);
     console.log({ websiteContent, websiteOgImage });
@@ -38,5 +54,30 @@ export default class apiController {
     await brower.close();
 
     return { websiteContent, websiteOgImage };
+  };
+
+  chatgptFunction = async (content) => {
+    // use puppeteer to bypass cloudflare (headful because of captchas)
+    const api = new ChatGPTAPIBrowser({
+      email: process.env.CHATGPT_EMAIL_ADDRESS,
+      password: process.env.CHATGPT_PASSWORD,
+    });
+
+    await api.initSession();
+
+    //👇🏻 Extracts the brand name from the website content
+    const getBrandName = await api.sendMessage(
+      `I have a raw text of a website, what is the brand name in a single word? ${content}`
+    );
+
+    //👇🏻 Extracts the brand description from the website content
+    const getBrandDescription = await api.sendMessage(
+      `I have a raw text of a website, can you extract the description of the website from the raw text. I need only the description and nothing else. ${content}`
+    );
+
+    return {
+      brandName: getBrandName.response,
+      brandDescription: getBrandDescription.response,
+    };
   };
 }
