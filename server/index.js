@@ -3,6 +3,8 @@ import cors from "cors";
 import { createRequire } from "module";
 import apiRouter from "./routes.js";
 const require = createRequire(import.meta.url);
+import dotenv from "dotenv";
+dotenv.config();
 
 const PORT = process.env.PORT || 4000;
 const app = express();

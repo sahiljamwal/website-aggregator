@@ -5,25 +5,30 @@ export default class ApiController {
   static database = [];
 
   submitWebsite = async (req, res) => {
-    const { url } = req.body;
+    try {
+      const { url } = req.body;
 
-    const { websiteContent, websiteOgImage } = await this.scrapWebsite(url);
+      const { websiteContent, websiteOgImage } = await this.scrapWebsite(url);
 
-    //👇🏻 accepts the website content as a parameter
-    let result = await this.chatgptFunction(websiteContent);
+      //👇🏻 accepts the website content as a parameter
+      let result = await this.chatgptFunction(websiteContent);
 
-    //👇🏻 adds the brand image and ID to the result
-    result.brandName = websiteOgImage;
-    result.id = uuidv4();
-    ApiController.database.push(result);
+      //👇🏻 adds the brand image and ID to the result
+      result.brandName = websiteOgImage;
+      result.id = uuidv4();
+      ApiController.database.push(result);
 
-    return res.json({
-      message: "Request successful!",
-      database: ApiController.database,
-    });
+      console.log("url:::", url);
+      console.log({ websiteContent, websiteOgImage });
 
-    console.log("url:::", url);
-    console.log({ websiteContent, websiteOgImage });
+      return res.status(200).json({
+        message: "Request successful!",
+        database: ApiController.database,
+      });
+    } catch (err) {
+      console.error(err);
+      return res.status(500).json({ message: err.message });
+    }
   };
 
   /**
@@ -44,11 +49,11 @@ export default class ApiController {
     //👇🏻 returns the website meta image
     const websiteOgImage = await page.evaluate(() => {
       const metas = document.getElementsByTagName("meta");
-      metas.forEach((meta) => {
-        if (meta.getAttribute("property") === "og:image") {
-          return meta.getAttribute("content");
+      for (let i = 0; i < metas.length; i++) {
+        if (metas[i].getAttribute("property") === "og:image") {
+          return metas[i].getAttribute("content");
         }
-      });
+      }
     });
 
     await brower.close();
