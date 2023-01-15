@@ -37,7 +37,7 @@ export default class ApiController {
    * @returns obj containing websiteDescription and websiteOgImage
    */
   scrapWebsite = async (url) => {
-    const brower = await launch();
+    const brower = await launch({ headless: true });
     const page = await brower.newPage();
     await page.goto(url);
 
