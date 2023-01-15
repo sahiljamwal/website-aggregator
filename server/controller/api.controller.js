@@ -18,9 +18,6 @@ export default class ApiController {
       result.id = uuidv4();
       ApiController.database.push(result);
 
-      console.log("url:::", url);
-      console.log({ websiteContent, websiteOgImage });
-
       return res.status(200).json({
         message: "Request successful!",
         database: ApiController.database,
